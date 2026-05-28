@@ -50,3 +50,38 @@ jobs:
             git commit -m "Automated Sync: Appended latest external repository feeds"
             git push
           fi
+
+      - name: Download and Merge Stremio Feed
+        run: |
+          TARGET_URL="https://blksmr.github.io/altstore-stremio/apps.json"
+          
+          # Download the external repo JSON safely
+          curl -sL "$TARGET_URL" -o spotc_temp.json
+          
+          # Verify the downloaded file is valid JSON and contains apps
+          if ! jq -e '.apps' spotc_temp.json > /dev/null; then
+            echo "Error: Downloaded file from SpotC is empty or invalid." && exit 1
+          fi
+
+          # Dynamic Merge using jq:
+          # This appends the external apps array directly to your existing apps array, 
+          # preserving everything you currently have in apps.json.
+          jq --slurpfile external spotc_temp.json \
+            '.apps += $external[0].apps' \
+            apps.json > unified_apps.json
+            
+          mv unified_apps.json apps.json
+          rm spotc_temp.json
+
+      - name: Commit and Push Combined Updates
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add apps.json
+          
+          if git diff --quiet && git diff --staged --quiet; then
+            echo "No upstream repo updates detected."
+          else
+            git commit -m "Automated Sync: Appended latest external repository feeds"
+            git push
+          fi
