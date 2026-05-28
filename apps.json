@@ -2,8 +2,8 @@
   "name": "DJRenzo LiveContainer Repo",
   "subtitle": "Keep my custom apps up to date",
   "description": "A private source for updating my custom sideloaded apps inside LiveContainer.",
-  "iconURL": "https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/livecontainer-source/main/icon.png",
-  "website": "https://github.com/YOUR_GITHUB_USERNAME/livecontainer-source",
+  "iconURL": "https://raw.githubusercontent.com/djrenzo/livecontainer/main/icon.png",
+  "website": "https://github.com/djrenzo/livecontainer",
   "apps": [
     {
       "name": "Infuse",
@@ -11,7 +11,7 @@
       "developerName": "DJRenzo",
       "subtitle": "Infuse Plus",
       "localizedDescription": "A longer description explaining what your custom application does.",
-      "iconURL": "https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/livecontainer-source/main/app_icon.png",
+      "iconURL": "https://raw.githubusercontent.com/djrenzo/livecontainer/main/icon.png",
       "versions": [
         {
           "version": "8.4.5",
