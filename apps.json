@@ -6,6 +6,23 @@
   "website": "https://github.com/djrenzo/livecontainer",
   "apps": [
     {
+      "name": "YTPlus",
+      "bundleIdentifier": "com.google.ios.youtube.app",
+      "developerName": "DJRenzo",
+      "subtitle": "Infuse Plus",
+      "localizedDescription": "A longer description explaining what your custom application does.",
+      "iconURL": "https://raw.githubusercontent.com/djrenzo/livecontainer/main/icon.png",
+      "versions": [
+        {
+          "version": "0.0.0",
+          "date": "2026-05-28",
+          "localizedDescription": "Initial release or latest update notes.",
+          "downloadURL": "https://placeholder.com",
+          "size": 0
+        }
+      ]
+    },
+    {
       "name": "Infuse",
       "bundleIdentifier": "com.firecore.infuse",
       "developerName": "DJRenzo",
