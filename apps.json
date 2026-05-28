@@ -14,11 +14,10 @@
       "iconURL": "https://raw.githubusercontent.com/djrenzo/livecontainer/main/icon.png",
       "versions": [
         {
-          "version": "0.0.0",
-          "date": "2026-05-28",
-          "localizedDescription": "Initial release or latest update notes.",
-          "downloadURL": "https://placeholder.com",
-          "size": 0
+          "version": "v21.13.6-5.2b4",
+          "date": "2026-04-24",
+          "downloadURL": "https://github.com/DeltAndy123/YTBetterPlus/releases/download/v21.13.6-5.2b4/YTBetterPlus_21.13.6-5.2b4.ipa",
+          "size": 131902806
         }
       ]
     },
