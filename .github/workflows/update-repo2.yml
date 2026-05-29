@@ -35,16 +35,13 @@ jobs:
         id: ytbetterplus
         run: |
           RELEASE_DATA=$(curl -s "https://api.github.com/repos/DeltAndy123/YTBetterPlus/releases/latest")
-
           DOWNLOAD_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | endswith(".ipa")) | .browser_download_url' | head -n 1)
           FILE_SIZE=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | endswith(".ipa")) | .size' | head -n 1)
           VERSION=$(echo "$RELEASE_DATA" | jq -r '.tag_name')
           PUBLISHED_DATE=$(echo "$RELEASE_DATA" | jq -r '.published_at' | cut -dT -f1)
-
           if [ -z "$DOWNLOAD_URL" ] || [ "$DOWNLOAD_URL" == "null" ]; then
             echo "Error: No IPA found in the latest release of DeltAndy123/YTBetterPlus." && exit 1
           fi
-
           echo "download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
           echo "file_size=$FILE_SIZE" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
@@ -55,12 +52,10 @@ jobs:
         run: |
           RELEASE_DATA=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/repos/${{ github.repository }}/releases/latest")
-
           DOWNLOAD_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | endswith(".ipa")) | .browser_download_url' | head -n 1)
           FILE_SIZE=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | endswith(".ipa")) | .size' | head -n 1)
           VERSION=$(echo "$RELEASE_DATA" | jq -r '.tag_name')
           PUBLISHED_DATE=$(echo "$RELEASE_DATA" | jq -r '.published_at' | cut -dT -f1)
-
           if [ -z "$DOWNLOAD_URL" ] || [ "$DOWNLOAD_URL" == "null" ]; then
             echo "Warning: No IPA found in the latest release of this repo. Skipping own release update."
             echo "found=false" >> $GITHUB_OUTPUT
@@ -77,14 +72,10 @@ jobs:
           if [ ! -f my_apps.json ]; then
             echo "Error: my_apps.json not found in repo." && exit 1
           fi
-
-          # Always rebuild from my_apps.json so external apps never accumulate.
-          # apps.json is a generated output - it does not need to exist beforehand.
           jq --slurpfile spotc spotc_temp.json \
              --slurpfile stremio stremio_temp.json \
              '.apps = (.apps + $spotc[0].apps + $stremio[0].apps)' \
              my_apps.json > apps.json
-
           rm spotc_temp.json stremio_temp.json
 
       - name: Inject YTBetterPlus latest release into apps.json
@@ -93,9 +84,6 @@ jobs:
           SIZE=${{ steps.ytbetterplus.outputs.file_size }}
           VER="${{ steps.ytbetterplus.outputs.version }}"
           DT="${{ steps.ytbetterplus.outputs.date }}"
-
-          # Finds the app in my_apps.json by bundleID and updates its versions[0].
-          # Change the bundleID selector to match your YTBetterPlus entry in my_apps.json.
           jq --arg url "$URL" \
              --argjson size "$SIZE" \
              --arg ver "$VER" \
@@ -111,9 +99,6 @@ jobs:
           SIZE=${{ steps.own_release.outputs.file_size }}
           VER="${{ steps.own_release.outputs.version }}"
           DT="${{ steps.own_release.outputs.date }}"
-
-          # Finds the app in my_apps.json by bundleID and updates its versions[0].
-          # Change the bundleID selector to match your Infuse Plus entry in my_apps.json.
           jq --arg url "$URL" \
              --argjson size "$SIZE" \
              --arg ver "$VER" \
@@ -127,9 +112,9 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add apps.json
-
           if git diff --staged --quiet; then
             echo "No upstream repo updates detected."
           else
             git commit -m "Automated Sync: Rebuilt apps.json from all sources"
             git push
+          fi
