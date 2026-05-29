@@ -18,9 +18,7 @@ jobs:
       - name: Download SpotC Feed
         run: |
           TARGET_URL="https://spotc-repo.yodaluca.dev/AltStore%20Repo.json"
-
           curl -sL "$TARGET_URL" -o spotc_temp.json
-
           if ! jq -e '.apps' spotc_temp.json > /dev/null; then
             echo "Error: Downloaded file from SpotC is empty or invalid." && exit 1
           fi
@@ -28,11 +26,50 @@ jobs:
       - name: Download Stremio Feed
         run: |
           TARGET_URL="https://blksmr.github.io/altstore-stremio/apps.json"
-
           curl -sL "$TARGET_URL" -o stremio_temp.json
-
           if ! jq -e '.apps' stremio_temp.json > /dev/null; then
             echo "Error: Downloaded file from Stremio is empty or invalid." && exit 1
+          fi
+
+      - name: Fetch Latest Release from DeltAndy123/YTBetterPlus
+        id: ytbetterplus
+        run: |
+          RELEASE_DATA=$(curl -s "https://api.github.com/repos/DeltAndy123/YTBetterPlus/releases/latest")
+
+          DOWNLOAD_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | endswith(".ipa")) | .browser_download_url' | head -n 1)
+          FILE_SIZE=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | endswith(".ipa")) | .size' | head -n 1)
+          VERSION=$(echo "$RELEASE_DATA" | jq -r '.tag_name')
+          PUBLISHED_DATE=$(echo "$RELEASE_DATA" | jq -r '.published_at' | cut -dT -f1)
+
+          if [ -z "$DOWNLOAD_URL" ] || [ "$DOWNLOAD_URL" == "null" ]; then
+            echo "Error: No IPA found in the latest release of DeltAndy123/YTBetterPlus." && exit 1
+          fi
+
+          echo "download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
+          echo "file_size=$FILE_SIZE" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "date=$PUBLISHED_DATE" >> $GITHUB_OUTPUT
+
+      - name: Fetch Latest Release from this repo
+        id: own_release
+        run: |
+          RELEASE_DATA=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/latest")
+
+          DOWNLOAD_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | endswith(".ipa")) | .browser_download_url' | head -n 1)
+          FILE_SIZE=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | endswith(".ipa")) | .size' | head -n 1)
+          VERSION=$(echo "$RELEASE_DATA" | jq -r '.tag_name')
+          PUBLISHED_DATE=$(echo "$RELEASE_DATA" | jq -r '.published_at' | cut -dT -f1)
+
+          if [ -z "$DOWNLOAD_URL" ] || [ "$DOWNLOAD_URL" == "null" ]; then
+            echo "Warning: No IPA found in the latest release of this repo. Skipping own release update."
+            echo "found=false" >> $GITHUB_OUTPUT
+          else
+            echo "download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
+            echo "file_size=$FILE_SIZE" >> $GITHUB_OUTPUT
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "date=$PUBLISHED_DATE" >> $GITHUB_OUTPUT
+            echo "found=true" >> $GITHUB_OUTPUT
           fi
 
       - name: Build apps.json from my_apps.json + external feeds
@@ -50,6 +87,41 @@ jobs:
 
           rm spotc_temp.json stremio_temp.json
 
+      - name: Inject YTBetterPlus latest release into apps.json
+        run: |
+          URL="${{ steps.ytbetterplus.outputs.download_url }}"
+          SIZE=${{ steps.ytbetterplus.outputs.file_size }}
+          VER="${{ steps.ytbetterplus.outputs.version }}"
+          DT="${{ steps.ytbetterplus.outputs.date }}"
+
+          # Finds the app in my_apps.json by bundleID and updates its versions[0].
+          # Change the bundleID selector to match your YTBetterPlus entry in my_apps.json.
+          jq --arg url "$URL" \
+             --argjson size "$SIZE" \
+             --arg ver "$VER" \
+             --arg dt "$DT" \
+             --arg bid "com.google.ios.youtube.app" \
+             '(.apps[] | select(.bundleIdentifier == $bid) | .versions[0]) = {version: $ver, date: $dt, downloadURL: $url, size: $size}' \
+             apps.json > tmp.json && mv tmp.json apps.json
+
+      - name: Inject own repo latest release into apps.json
+        if: steps.own_release.outputs.found == 'true'
+        run: |
+          URL="${{ steps.own_release.outputs.download_url }}"
+          SIZE=${{ steps.own_release.outputs.file_size }}
+          VER="${{ steps.own_release.outputs.version }}"
+          DT="${{ steps.own_release.outputs.date }}"
+
+          # Finds the app in my_apps.json by bundleID and updates its versions[0].
+          # Change the bundleID selector to match your Infuse Plus entry in my_apps.json.
+          jq --arg url "$URL" \
+             --argjson size "$SIZE" \
+             --arg ver "$VER" \
+             --arg dt "$DT" \
+             --arg bid "com.djrenzo.infuse" \
+             '(.apps[] | select(.bundleIdentifier == $bid) | .versions[0]) = {version: $ver, date: $dt, downloadURL: $url, size: $size}' \
+             apps.json > tmp.json && mv tmp.json apps.json
+
       - name: Commit and Push Combined Updates
         run: |
           git config --global user.name "github-actions[bot]"
@@ -59,6 +131,5 @@ jobs:
           if git diff --staged --quiet; then
             echo "No upstream repo updates detected."
           else
-            git commit -m "Automated Sync: Rebuilt apps.json from my_apps.json + external feeds"
+            git commit -m "Automated Sync: Rebuilt apps.json from all sources"
             git push
-          fi
