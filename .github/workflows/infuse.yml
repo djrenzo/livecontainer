@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       ipa_path:
-        description: "Path to the decrypted IPA file within the repo (e.g. ipas/Infuse.ipa)"
+        description: "Path to the decrypted IPA file within the repo (e.g. infuse-8.4.5.ipa)"
         default: ""
         required: true
         type: string
