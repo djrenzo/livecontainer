@@ -1,4 +1,4 @@
-name: Create Infuse Plus app
+name: Infuse Builder
 
 on:
   workflow_dispatch:
@@ -40,6 +40,15 @@ jobs:
           path: main
           submodules: recursive
 
+      - name: Extract IPA version from filename
+        id: ipa_version
+        run: |
+          # Strips prefix up to first '-' and suffix '.ipa': infuse-8.4.5.ipa -> 8.4.5
+          FILENAME="${{ inputs.ipa_path }}"
+          IPA_VERSION="${FILENAME#*-}"
+          IPA_VERSION="${IPA_VERSION%.ipa}"
+          echo "value=$IPA_VERSION" >> $GITHUB_OUTPUT
+
       - name: Validate IPA path
         run: |
           IPA_FILE="main/ipa/${{ inputs.ipa_path }}"
@@ -75,22 +84,22 @@ jobs:
 
       - name: Create and push tag
         run: |
-          TAG="infuseplus-v${{ inputs.tweak_version }}-${{ github.run_number }}"
+          TAG="infuseplus-v${{ inputs.tweak_version }}-${{ github.run_number }}-v${{ steps.ipa_version.outputs.value }}"
           cd main
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag "$TAG"
           git push origin "$TAG"
- 
+
       - name: Upload to GitHub Releases
         uses: softprops/action-gh-release@v2.0.1
         with:
-          tag_name: infuseplus-v${{ inputs.tweak_version }}-${{ github.run_number }}
-          name: InfusePlus v${{ inputs.tweak_version }} (${{ github.run_number }})
+          tag_name: infuseplus-v${{ inputs.tweak_version }}-${{ github.run_number }}-v${{ steps.ipa_version.outputs.value }}
+          name: InfusePlus v${{ inputs.tweak_version }} (Infuse v${{ steps.ipa_version.outputs.value }})
           files: InfusePlus_${{ inputs.tweak_version }}.ipa
           draft: false
           prerelease: false
- 
+
       - name: Output Release URL
         run: |
           echo "::notice::Release available at: https://github.com/${{ github.repository }}/releases"
