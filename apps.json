@@ -9,7 +9,7 @@
       "name": "YTPlus",
       "bundleIdentifier": "com.google.ios.youtube.app",
       "developerName": "DJRenzo",
-      "subtitle": "Infuse Plus",
+      "subtitle": "YouTube with YTBetterPlus tweak",
       "localizedDescription": "A longer description explaining what your custom application does.",
       "iconURL": "https://raw.githubusercontent.com/djrenzo/livecontainer/main/logo_yt.png",
       "versions": [
@@ -23,18 +23,17 @@
     },
     {
       "name": "Infuse",
-      "bundleIdentifier": "com.firecore.infuse",
+      "bundleIdentifier": "com.djrenzo.infuse",
       "developerName": "DJRenzo",
-      "subtitle": "Infuse Plus",
+      "subtitle": "Infuse Plus tweak",
       "localizedDescription": "A longer description explaining what your custom application does.",
       "iconURL": "https://raw.githubusercontent.com/djrenzo/livecontainer/main/icon.png",
       "versions": [
         {
-          "version": "8.4.5",
-          "date": "2026-05-28",
-          "localizedDescription": "Initial release or latest update notes.",
-          "downloadURL": "https://github.com/djrenzo/livecontainer/releases/download/v1.0.0/InfusePlus_2.5.ipa",
-          "size": 95206343
+          "version": "infuseplus-v2.5-5",
+          "date": "2026-05-29",
+          "downloadURL": "https://github.com/djrenzo/livecontainer/releases/download/infuseplus-v2.5-5/InfusePlus_2.5.ipa",
+          "size": 95203825
         }
       ]
     },
