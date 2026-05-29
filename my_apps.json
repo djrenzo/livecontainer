@@ -1,0 +1,42 @@
+{
+  "name": "DJRenzo Repo",
+  "subtitle": "Keep my custom apps up to date",
+  "description": "A private source for updating my custom sideloaded apps inside LiveContainer.",
+  "iconURL": "https://raw.githubusercontent.com/djrenzo/livecontainer/main/icon.png",
+  "website": "https://github.com/djrenzo/livecontainer",
+  "apps": [
+    {
+      "name": "YTPlus",
+      "bundleIdentifier": "com.google.ios.youtube.app",
+      "developerName": "DJRenzo",
+      "subtitle": "Infuse Plus",
+      "localizedDescription": "A longer description explaining what your custom application does.",
+      "iconURL": "https://raw.githubusercontent.com/djrenzo/livecontainer/main/logo_yt.png",
+      "versions": [
+        {
+          "version": "v21.13.6-5.2b4",
+          "date": "2026-04-24",
+          "downloadURL": "https://github.com/DeltAndy123/YTBetterPlus/releases/download/v21.13.6-5.2b4/YTBetterPlus_21.13.6-5.2b4.ipa",
+          "size": 131902806
+        }
+      ]
+    },
+    {
+      "name": "Infuse",
+      "bundleIdentifier": "com.firecore.infuse",
+      "developerName": "DJRenzo",
+      "subtitle": "Infuse Plus",
+      "localizedDescription": "A longer description explaining what your custom application does.",
+      "iconURL": "https://raw.githubusercontent.com/djrenzo/livecontainer/main/icon.png",
+      "versions": [
+        {
+          "version": "8.4.5",
+          "date": "2026-05-28",
+          "localizedDescription": "Initial release or latest update notes.",
+          "downloadURL": "https://github.com/djrenzo/livecontainer/releases/download/v1.0.0/InfusePlus_2.5.ipa",
+          "size": 95206343
+        }
+      ]
+    }
+  ]
+}
