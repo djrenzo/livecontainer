@@ -73,14 +73,24 @@ jobs:
       - name: Inject tweaks into IPA
         run: cyan -i infuse.ipa -o InfusePlus_${{ inputs.tweak_version }}.ipa -uwef infplus.deb -n "${{ inputs.display_name }}" -b ${{ inputs.bundle_id }}
 
+      - name: Create and push tag
+        run: |
+          TAG="infuseplus-v${{ inputs.tweak_version }}-${{ github.run_number }}"
+          cd main
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG"
+          git push origin "$TAG"
+ 
       - name: Upload to GitHub Releases
         uses: softprops/action-gh-release@v2.0.1
         with:
           tag_name: infuseplus-v${{ inputs.tweak_version }}-${{ github.run_number }}
           name: InfusePlus v${{ inputs.tweak_version }} (${{ github.run_number }})
           files: InfusePlus_${{ inputs.tweak_version }}.ipa
-          draft: true
-
+          draft: false
+          prerelease: false
+ 
       - name: Output Release URL
         run: |
           echo "::notice::Release available at: https://github.com/${{ github.repository }}/releases"
