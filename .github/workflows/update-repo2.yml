@@ -1,4 +1,4 @@
-name: Sync External Repositories Dynamically
+name: Build Apps.json
 
 on:
   schedule:
@@ -54,15 +54,17 @@ jobs:
             "https://api.github.com/repos/${{ github.repository }}/releases/latest")
           DOWNLOAD_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | endswith(".ipa")) | .browser_download_url' | head -n 1)
           FILE_SIZE=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | endswith(".ipa")) | .size' | head -n 1)
-          VERSION=$(echo "$RELEASE_DATA" | jq -r '.tag_name')
+          TAG=$(echo "$RELEASE_DATA" | jq -r '.tag_name')
           PUBLISHED_DATE=$(echo "$RELEASE_DATA" | jq -r '.published_at' | cut -dT -f1)
+          # Extract the IPA version from the last segment of the tag: infuseplus-v2.5-42-v8.4.5 -> 8.4.5
+          IPA_VERSION="${TAG##*-v}"
           if [ -z "$DOWNLOAD_URL" ] || [ "$DOWNLOAD_URL" == "null" ]; then
             echo "Warning: No IPA found in the latest release of this repo. Skipping own release update."
             echo "found=false" >> $GITHUB_OUTPUT
           else
             echo "download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
             echo "file_size=$FILE_SIZE" >> $GITHUB_OUTPUT
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "version=$IPA_VERSION" >> $GITHUB_OUTPUT
             echo "date=$PUBLISHED_DATE" >> $GITHUB_OUTPUT
             echo "found=true" >> $GITHUB_OUTPUT
           fi
