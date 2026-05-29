@@ -11,77 +11,54 @@ permissions:
 jobs:
   merge-repositories:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Source Repo
         uses: actions/checkout@v4
 
-      - name: Download and Merge SpotC Feed
+      - name: Download SpotC Feed
         run: |
           TARGET_URL="https://spotc-repo.yodaluca.dev/AltStore%20Repo.json"
-          
-          # Download the external repo JSON safely
+
           curl -sL "$TARGET_URL" -o spotc_temp.json
-          
-          # Verify the downloaded file is valid JSON and contains apps
+
           if ! jq -e '.apps' spotc_temp.json > /dev/null; then
             echo "Error: Downloaded file from SpotC is empty or invalid." && exit 1
           fi
 
-          # Dynamic Merge using jq:
-          # This appends the external apps array directly to your existing apps array, 
-          # preserving everything you currently have in apps.json.
-          jq --slurpfile external spotc_temp.json \
-            '.apps += $external[0].apps' \
-            apps.json > unified_apps.json
-            
-          mv unified_apps.json apps.json
-          rm spotc_temp.json
-
-      - name: Commit and Push Combined Updates
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add apps.json
-          
-          if git diff --quiet && git diff --staged --quiet; then
-            echo "No upstream repo updates detected."
-          else
-            git commit -m "Automated Sync: Appended latest external repository feeds"
-            git push
-          fi
-
-      - name: Download and Merge Stremio Feed
+      - name: Download Stremio Feed
         run: |
           TARGET_URL="https://blksmr.github.io/altstore-stremio/apps.json"
-          
-          # Download the external repo JSON safely
-          curl -sL "$TARGET_URL" -o spotc_temp.json
-          
-          # Verify the downloaded file is valid JSON and contains apps
-          if ! jq -e '.apps' spotc_temp.json > /dev/null; then
-            echo "Error: Downloaded file from SpotC is empty or invalid." && exit 1
+
+          curl -sL "$TARGET_URL" -o stremio_temp.json
+
+          if ! jq -e '.apps' stremio_temp.json > /dev/null; then
+            echo "Error: Downloaded file from Stremio is empty or invalid." && exit 1
           fi
 
-          # Dynamic Merge using jq:
-          # This appends the external apps array directly to your existing apps array, 
-          # preserving everything you currently have in apps.json.
-          jq --slurpfile external spotc_temp.json \
-            '.apps += $external[0].apps' \
-            apps.json > unified_apps.json
-            
-          mv unified_apps.json apps.json
-          rm spotc_temp.json
+      - name: Build apps.json from my_apps.json + external feeds
+        run: |
+          if [ ! -f my_apps.json ]; then
+            echo "Error: my_apps.json not found in repo." && exit 1
+          fi
+
+          # Always rebuild from my_apps.json so external apps never accumulate.
+          # apps.json is a generated output - it does not need to exist beforehand.
+          jq --slurpfile spotc spotc_temp.json \
+             --slurpfile stremio stremio_temp.json \
+             '.apps = (.apps + $spotc[0].apps + $stremio[0].apps)' \
+             my_apps.json > apps.json
+
+          rm spotc_temp.json stremio_temp.json
 
       - name: Commit and Push Combined Updates
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add apps.json
-          
-          if git diff --quiet && git diff --staged --quiet; then
+
+          if git diff --staged --quiet; then
             echo "No upstream repo updates detected."
           else
-            git commit -m "Automated Sync: Appended latest external repository feeds"
+            git commit -m "Automated Sync: Rebuilt apps.json from my_apps.json + external feeds"
             git push
           fi
