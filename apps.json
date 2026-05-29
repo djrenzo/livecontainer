@@ -30,9 +30,9 @@
       "iconURL": "https://raw.githubusercontent.com/djrenzo/livecontainer/main/icon.png",
       "versions": [
         {
-          "version": "infuseplus-v2.5-5",
+          "version": "8.4.5",
           "date": "2026-05-29",
-          "downloadURL": "https://github.com/djrenzo/livecontainer/releases/download/infuseplus-v2.5-5/InfusePlus_2.5.ipa",
+          "downloadURL": "https://github.com/djrenzo/livecontainer/releases/download/infuseplus-v2.5-6-v8.4.5/InfusePlus_2.5.ipa",
           "size": 95203825
         }
       ]
