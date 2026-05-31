@@ -2,8 +2,8 @@ name: Build Apps.json
 
 on:
   schedule:
-    - cron: '0 2 * * *' # Runs automatically every day at 2:00 AM UTC
-  workflow_dispatch: # Allows you to run it manually anytime
+    - cron: '17 23 * * *'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -47,24 +47,58 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "date=$PUBLISHED_DATE" >> $GITHUB_OUTPUT
 
-      - name: Fetch Latest Release from this repo
-        id: own_release
+      - name: Fetch Latest InfusePlus release from this repo
+        id: infuse_release
         run: |
+          # Get all releases and find the latest one that has an InfusePlus_*.ipa asset
           RELEASE_DATA=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/releases/latest")
-          DOWNLOAD_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | endswith(".ipa")) | .browser_download_url' | head -n 1)
-          FILE_SIZE=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | endswith(".ipa")) | .size' | head -n 1)
-          TAG=$(echo "$RELEASE_DATA" | jq -r '.tag_name')
-          PUBLISHED_DATE=$(echo "$RELEASE_DATA" | jq -r '.published_at' | cut -dT -f1)
-          # Extract the IPA version from the last segment of the tag: infuseplus-v2.5-42-v8.4.5 -> 8.4.5
+            "https://api.github.com/repos/${{ github.repository }}/releases?per_page=50")
+
+          RELEASE=$(echo "$RELEASE_DATA" | jq -c \
+            '[.[] | select(.assets[] | .name | test("^InfusePlus_.*\\.ipa$"))] | first')
+
+          DOWNLOAD_URL=$(echo "$RELEASE" | jq -r '.assets[] | select(.name | test("^InfusePlus_.*\\.ipa$")) | .browser_download_url' | head -n 1)
+          FILE_SIZE=$(echo "$RELEASE" | jq -r '.assets[] | select(.name | test("^InfusePlus_.*\\.ipa$")) | .size' | head -n 1)
+          TAG=$(echo "$RELEASE" | jq -r '.tag_name')
+          PUBLISHED_DATE=$(echo "$RELEASE" | jq -r '.published_at' | cut -dT -f1)
+          # Extract IPA version from tag: infuseplus-v2.5-42-v8.4.5 -> 8.4.5
           IPA_VERSION="${TAG##*-v}"
+
           if [ -z "$DOWNLOAD_URL" ] || [ "$DOWNLOAD_URL" == "null" ]; then
-            echo "Warning: No IPA found in the latest release of this repo. Skipping own release update."
+            echo "Warning: No InfusePlus IPA found. Skipping."
             echo "found=false" >> $GITHUB_OUTPUT
           else
             echo "download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
             echo "file_size=$FILE_SIZE" >> $GITHUB_OUTPUT
             echo "version=$IPA_VERSION" >> $GITHUB_OUTPUT
+            echo "date=$PUBLISHED_DATE" >> $GITHUB_OUTPUT
+            echo "found=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Fetch Latest Kodi release from this repo
+        id: kodi_release
+        run: |
+          # Get all releases and find the latest one that has a Kodi_*.ipa asset
+          RELEASE_DATA=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases?per_page=50")
+
+          RELEASE=$(echo "$RELEASE_DATA" | jq -c \
+            '[.[] | select(.assets[] | .name | test("^Kodi_.*\\.ipa$"))] | first')
+
+          DOWNLOAD_URL=$(echo "$RELEASE" | jq -r '.assets[] | select(.name | test("^Kodi_.*\\.ipa$")) | .browser_download_url' | head -n 1)
+          FILE_SIZE=$(echo "$RELEASE" | jq -r '.assets[] | select(.name | test("^Kodi_.*\\.ipa$")) | .size' | head -n 1)
+          TAG=$(echo "$RELEASE" | jq -r '.tag_name')
+          PUBLISHED_DATE=$(echo "$RELEASE" | jq -r '.published_at' | cut -dT -f1)
+          # Extract version from tag: kodi-v21.3 -> 21.3
+          KODI_VERSION="${TAG#kodi-v}"
+
+          if [ -z "$DOWNLOAD_URL" ] || [ "$DOWNLOAD_URL" == "null" ]; then
+            echo "Warning: No Kodi IPA found. Skipping."
+            echo "found=false" >> $GITHUB_OUTPUT
+          else
+            echo "download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
+            echo "file_size=$FILE_SIZE" >> $GITHUB_OUTPUT
+            echo "version=$KODI_VERSION" >> $GITHUB_OUTPUT
             echo "date=$PUBLISHED_DATE" >> $GITHUB_OUTPUT
             echo "found=true" >> $GITHUB_OUTPUT
           fi
@@ -94,18 +128,33 @@ jobs:
              '(.apps[] | select(.bundleIdentifier == $bid) | .versions[0]) = {version: $ver, date: $dt, downloadURL: $url, size: $size}' \
              apps.json > tmp.json && mv tmp.json apps.json
 
-      - name: Inject own repo latest release into apps.json
-        if: steps.own_release.outputs.found == 'true'
+      - name: Inject InfusePlus latest release into apps.json
+        if: steps.infuse_release.outputs.found == 'true'
         run: |
-          URL="${{ steps.own_release.outputs.download_url }}"
-          SIZE=${{ steps.own_release.outputs.file_size }}
-          VER="${{ steps.own_release.outputs.version }}"
-          DT="${{ steps.own_release.outputs.date }}"
+          URL="${{ steps.infuse_release.outputs.download_url }}"
+          SIZE=${{ steps.infuse_release.outputs.file_size }}
+          VER="${{ steps.infuse_release.outputs.version }}"
+          DT="${{ steps.infuse_release.outputs.date }}"
           jq --arg url "$URL" \
              --argjson size "$SIZE" \
              --arg ver "$VER" \
              --arg dt "$DT" \
              --arg bid "com.djrenzo.infuse" \
+             '(.apps[] | select(.bundleIdentifier == $bid) | .versions[0]) = {version: $ver, date: $dt, downloadURL: $url, size: $size}' \
+             apps.json > tmp.json && mv tmp.json apps.json
+
+      - name: Inject Kodi latest release into apps.json
+        if: steps.kodi_release.outputs.found == 'true'
+        run: |
+          URL="${{ steps.kodi_release.outputs.download_url }}"
+          SIZE=${{ steps.kodi_release.outputs.file_size }}
+          VER="${{ steps.kodi_release.outputs.version }}"
+          DT="${{ steps.kodi_release.outputs.date }}"
+          jq --arg url "$URL" \
+             --argjson size "$SIZE" \
+             --arg ver "$VER" \
+             --arg dt "$DT" \
+             --arg bid "org.xbmc.kodi-ios.app" \
              '(.apps[] | select(.bundleIdentifier == $bid) | .versions[0]) = {version: $ver, date: $dt, downloadURL: $url, size: $size}' \
              apps.json > tmp.json && mv tmp.json apps.json
 
