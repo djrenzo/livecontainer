@@ -25,7 +25,7 @@ jobs:
 
       - name: Download Stremio Feed
         run: |
-          TARGET_URL="https://blksmr.github.io/altstore-stremio/apps.json"
+          TARGET_URL="https://dl.strem.io/apple/altstore/source.json"
           curl -sL "$TARGET_URL" -o stremio_temp.json
           if ! jq -e '.apps' stremio_temp.json > /dev/null; then
             echo "Error: Downloaded file from Stremio is empty or invalid." && exit 1
