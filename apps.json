@@ -1661,6 +1661,15 @@
       },
       "versions": [
         {
+          "version": "2.0.3",
+          "buildVersion": "18",
+          "date": "2026-07-11",
+          "downloadURL": "https://dl.strem.io/apple/altstore/stremio/2.0.3-18/manifest.json",
+          "size": 78149204,
+          "minOSVersion": "13.0",
+          "localizedDescription": "feat: native Stremio app for macOS\nfeat: automatic macOS updates with delta update support\nfeat: update notices for outdated app versions\nfeat: experimental Picture in Picture support on macOS and tvOS\nfeat: improved KSPlayer Picture in Picture support\nfeat: privacy-friendly crash analytics, configurable from settings\nfeat: bottom toast notifications\nfeat: OLED dark background setting\n\nPlayback Fixes\nfix: show VLC buffering state correctly\nfix: prevent VLC playback startup and end-of-video deadlocks\nfix: prevent seek controls from getting stuck\nfix: fix crashes while seeking\nfix: keep video visible when replacing KSPlayer media\nfix: show an error message when playback fails\nfix: avoid lockups after autoplay finishes a video\nfix: clean up player animations and timers after closing playback\nfix: keep profile lock from interrupting active playback or Picture in Picture\nfix: repair Infuse callback handling\n\nInterface Fixes\nfix: stabilize Settings layout, backgrounds, separators, and account rows\nfix: improve loading and playback-error overlay layout\nfix: improve filter button row edge fade"
+        },
+        {
           "version": "2.0.2",
           "buildVersion": "17",
           "date": "2026-06-22",
@@ -1668,14 +1677,6 @@
           "size": 77675411,
           "minOSVersion": "13.0",
           "localizedDescription": "fix: titles not showing on board and search"
-        },
-        {
-          "version": "2.0.1",
-          "buildVersion": "16",
-          "date": "2026-06-16",
-          "downloadURL": "https://dl.strem.io/apple/altstore/stremio/2.0.1-16/manifest.json",
-          "size": 77677211,
-          "minOSVersion": "13.0"
         }
       ],
       "appPermissions": {
