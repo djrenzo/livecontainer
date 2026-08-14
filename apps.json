@@ -54,6 +54,22 @@
       ]
     },
     {
+      "name": "Aperture",
+      "bundleIdentifier": "com.djrenzo.aperture",
+      "developerName": "DJRenzo",
+      "subtitle": "Photo gallery frontend app",
+      "localizedDescription": "A longer description explaining what your custom application does.",
+      "iconURL": "https://raw.githubusercontent.com/djrenzo/livecontainer/main/icon-apt.png",
+      "versions": [
+        {
+          "version": "v1.0.9",
+          "date": "2026-08-14",
+          "downloadURL": "https://github.com/djrenzo/iosappdidi/releases/download/v1.0.9/PhotoGalleryFrontend.ipa",
+          "size": 383741
+        }
+      ]
+    },
+    {
       "name": "SpotC++",
       "bundleIdentifier": "com.yodaluca23.SpotCPlusPlus",
       "developerName": "Whoeevee & Aesthyrica",
