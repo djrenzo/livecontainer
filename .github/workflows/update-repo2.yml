@@ -23,14 +23,6 @@ jobs:
             echo "Error: Downloaded file from SpotC is empty or invalid." && exit 1
           fi
 
-      - name: Download Stremio Feed
-        run: |
-          TARGET_URL="https://blksmr.github.io/altstore-stremio/apps.json"
-          curl -sL "$TARGET_URL" -o stremio_temp.json
-          if ! jq -e '.apps' stremio_temp.json > /dev/null; then
-            echo "Error: Downloaded file from Stremio is empty or invalid." && exit 1
-          fi
-
       - name: Fetch Latest Release from DeltAndy123/YTBetterPlus
         id: ytbetterplus
         run: |
@@ -41,6 +33,22 @@ jobs:
           PUBLISHED_DATE=$(echo "$RELEASE_DATA" | jq -r '.published_at' | cut -dT -f1)
           if [ -z "$DOWNLOAD_URL" ] || [ "$DOWNLOAD_URL" == "null" ]; then
             echo "Error: No IPA found in the latest release of DeltAndy123/YTBetterPlus." && exit 1
+          fi
+          echo "download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
+          echo "file_size=$FILE_SIZE" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "date=$PUBLISHED_DATE" >> $GITHUB_OUTPUT
+
+      - name: Fetch Latest Release from djrenzo/iosappdidi
+        id: aperture
+        run: |
+          RELEASE_DATA=$(curl -s "https://api.github.com/repos/djrenzo/iosappdidi/releases/latest")
+          DOWNLOAD_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | endswith(".ipa")) | .browser_download_url' | head -n 1)
+          FILE_SIZE=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | endswith(".ipa")) | .size' | head -n 1)
+          VERSION=$(echo "$RELEASE_DATA" | jq -r '.tag_name')
+          PUBLISHED_DATE=$(echo "$RELEASE_DATA" | jq -r '.published_at' | cut -dT -f1)
+          if [ -z "$DOWNLOAD_URL" ] || [ "$DOWNLOAD_URL" == "null" ]; then
+            echo "Error: No IPA found in the latest release of djrenzo/iosappdidi." && exit 1
           fi
           echo "download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
           echo "file_size=$FILE_SIZE" >> $GITHUB_OUTPUT
@@ -75,10 +83,9 @@ jobs:
             echo "Error: my_apps.json not found in repo." && exit 1
           fi
           jq --slurpfile spotc spotc_temp.json \
-             --slurpfile stremio stremio_temp.json \
-             '.apps = (.apps + $spotc[0].apps + $stremio[0].apps)' \
+             '.apps = (.apps + $spotc[0].apps)' \
              my_apps.json > apps.json
-          rm spotc_temp.json stremio_temp.json
+          rm spotc_temp.json
 
       - name: Inject YTBetterPlus latest release into apps.json
         run: |
@@ -91,6 +98,20 @@ jobs:
              --arg ver "$VER" \
              --arg dt "$DT" \
              --arg bid "com.google.ios.youtube.app" \
+             '(.apps[] | select(.bundleIdentifier == $bid) | .versions[0]) = {version: $ver, date: $dt, downloadURL: $url, size: $size}' \
+             apps.json > tmp.json && mv tmp.json apps.json
+
+      - name: Inject Aperture latest release into apps.json
+        run: |
+          URL="${{ steps.aperture.outputs.download_url }}"
+          SIZE=${{ steps.aperture.outputs.file_size }}
+          VER="${{ steps.aperture.outputs.version }}"
+          DT="${{ steps.aperture.outputs.date }}"
+          jq --arg url "$URL" \
+             --argjson size "$SIZE" \
+             --arg ver "$VER" \
+             --arg dt "$DT" \
+             --arg bid "com.djrenzo.aperture" \
              '(.apps[] | select(.bundleIdentifier == $bid) | .versions[0]) = {version: $ver, date: $dt, downloadURL: $url, size: $size}' \
              apps.json > tmp.json && mv tmp.json apps.json
 
