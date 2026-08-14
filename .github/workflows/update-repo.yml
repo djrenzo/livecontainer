@@ -45,7 +45,7 @@ jobs:
           RELEASE_DATA=$(curl -s "https://api.github.com/repos/djrenzo/iosappdidi/releases/latest")
           DOWNLOAD_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | endswith(".ipa")) | .browser_download_url' | head -n 1)
           FILE_SIZE=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | endswith(".ipa")) | .size' | head -n 1)
-          VERSION=$(echo "$RELEASE_DATA" | jq -r '.tag_name')
+          VERSION=$(echo "$RELEASE_DATA" | jq -r '.tag_name' | sed 's/^v//')
           PUBLISHED_DATE=$(echo "$RELEASE_DATA" | jq -r '.published_at' | cut -dT -f1)
           if [ -z "$DOWNLOAD_URL" ] || [ "$DOWNLOAD_URL" == "null" ]; then
             echo "Error: No IPA found in the latest release of djrenzo/iosappdidi." && exit 1
