@@ -2,7 +2,7 @@
   "name": "DJRenzo Repo",
   "subtitle": "Keep my custom apps up to date",
   "description": "A private source for updating my custom sideloaded apps inside LiveContainer.",
-  "iconURL": "https://raw.githubusercontent.com/djrenzo/livecontainer/main/icon.png",
+  "iconURL": "https://raw.githubusercontent.com/djrenzo/livecontainer/main/resources/icons/infuse.png",
   "website": "https://github.com/djrenzo/livecontainer",
   "apps": [
     {
@@ -11,7 +11,7 @@
       "developerName": "DJRenzo",
       "subtitle": "YouTube with YTBetterPlus tweak",
       "localizedDescription": "A longer description explaining what your custom application does.",
-      "iconURL": "https://raw.githubusercontent.com/djrenzo/livecontainer/main/logo_yt.png",
+      "iconURL": "https://raw.githubusercontent.com/djrenzo/livecontainer/main/resources/icons/yt.png",
       "versions": [
         {
           "version": "placeholder",
@@ -27,7 +27,23 @@
       "developerName": "DJRenzo",
       "subtitle": "Infuse Plus tweak",
       "localizedDescription": "A longer description explaining what your custom application does.",
-      "iconURL": "https://raw.githubusercontent.com/djrenzo/livecontainer/main/icon.png",
+      "iconURL": "https://raw.githubusercontent.com/djrenzo/livecontainer/main/resources/icons/infuse.png",
+      "versions": [
+        {
+          "version": "placeholder",
+          "date": "2026-01-01",
+          "downloadURL": "https://example.com/placeholder.ipa",
+          "size": 0
+        }
+      ]
+    },
+    {
+      "name": "Kodi",
+      "bundleIdentifier": "org.xbmc.kodi-ios.app",
+      "developerName": "DJRenzo",
+      "subtitle": "Kodi for iOS",
+      "localizedDescription": "A longer description explaining what your custom application does.",
+      "iconURL": "https://raw.githubusercontent.com/djrenzo/livecontainer/main/resources/icons/kodi.png",
       "versions": [
         {
           "version": "placeholder",

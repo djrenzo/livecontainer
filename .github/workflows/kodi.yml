@@ -1,0 +1,96 @@
+name: Generate latest Kodi deb
+
+on:
+  # schedule:
+  #   - cron: '0 3 * * *' # Check daily for new releases
+  workflow_dispatch:
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Find latest stable Kodi deb
+        id: find_deb
+        run: |
+          BASE_URL="https://mirrors.kodi.tv/releases/darwin/ios-arm64"
+
+          # Scrape the index page and find the first .deb that is a stable release
+          # (no ~rc, ~b, ~beta in the filename), sorted by date descending
+          FILENAME=$(curl -s "$BASE_URL/?C=M&O=D" \
+            | grep -oP 'org\.xbmc\.kodi-ios_[\d.]+_iphoneos-arm64\.deb' \
+            | head -n 1)
+
+          if [ -z "$FILENAME" ]; then
+            echo "::error::Could not find a stable Kodi deb on the mirror." && exit 1
+          fi
+
+          # Extract version from filename: org.xbmc.kodi-ios_21.3_iphoneos-arm64.deb -> 21.3
+          VERSION=$(echo "$FILENAME" | grep -oP '(?<=kodi-ios_)[\d.]+(?=_iphoneos)')
+
+          DEB_URL="$BASE_URL/$FILENAME"
+
+          echo "filename=$FILENAME" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "deb_url=$DEB_URL" >> $GITHUB_OUTPUT
+          echo "Found: $FILENAME (v$VERSION)"
+
+      - name: Check if this version was already released
+        id: check_existing
+        run: |
+          TAG="kodi-v${{ steps.find_deb.outputs.version }}"
+          EXISTS=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/$TAG" \
+            | jq -r '.tag_name // empty')
+
+          if [ -n "$EXISTS" ]; then
+            echo "Release $TAG already exists, nothing to do."
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "New version found, proceeding with conversion."
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Download deb
+        if: steps.check_existing.outputs.skip == 'false'
+        run: curl -L -o app.deb "${{ steps.find_deb.outputs.deb_url }}"
+
+      - name: Verify deb contains /Applications
+        if: steps.check_existing.outputs.skip == 'false'
+        run: |
+          if ! dpkg-deb -c app.deb | grep -q './Applications/'; then
+            echo "::error::This deb does not contain an /Applications directory."
+            exit 1
+          fi
+
+      - name: Convert deb to IPA
+        if: steps.check_existing.outputs.skip == 'false'
+        run: |
+          dpkg-deb -X app.deb extracted/
+          mkdir -p ipa/Payload
+          cp -R extracted/Applications/* ipa/Payload/
+          cd ipa
+          zip -r ../Kodi_${{ steps.find_deb.outputs.version }}.ipa .
+
+      - name: Create and push tag
+        if: steps.check_existing.outputs.skip == 'false'
+        run: |
+          TAG="kodi-v${{ steps.find_deb.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG"
+          git push origin "$TAG"
+
+      - name: Upload to GitHub Releases
+        if: steps.check_existing.outputs.skip == 'false'
+        uses: softprops/action-gh-release@v2.0.1
+        with:
+          tag_name: kodi-v${{ steps.find_deb.outputs.version }}
+          name: Kodi v${{ steps.find_deb.outputs.version }}
+          files: Kodi_${{ steps.find_deb.outputs.version }}.ipa
+          draft: false
+          prerelease: false
