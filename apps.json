@@ -62,10 +62,10 @@
       "iconURL": "https://raw.githubusercontent.com/djrenzo/livecontainer/main/icon-apt.png",
       "versions": [
         {
-          "version": "1.0.15",
-          "date": "2026-08-26",
-          "downloadURL": "https://github.com/djrenzo/iosappdidi/releases/download/v1.0.15/PhotoGalleryFrontend.ipa",
-          "size": 399454
+          "version": "1.0.16",
+          "date": "2026-08-28",
+          "downloadURL": "https://github.com/djrenzo/iosappdidi/releases/download/v1.0.16/PhotoGalleryFrontend.ipa",
+          "size": 403595
         }
       ]
     },
